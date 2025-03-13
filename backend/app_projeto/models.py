@@ -1,0 +1,22 @@
+from django.db import models
+from django.core.exceptions import ValidationError
+
+class Usuario(models.Model):
+    nome = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    telefone = models.CharField(max_length=15, blank=True, null=True)
+    cpf = models.CharField(max_length=14, unique=True)
+    senha = models.CharField(max_length=255)
+    status = models.CharField(max_length=10, default='ativo')
+    
+    role = models.CharField(max_length=10, choices=[('Paciente', 'Paciente'), ('Medico', 'Médico')], default='Paciente')
+    crm = models.CharField(max_length=20, blank=True, null=True)  # Permitido vazio
+
+    def clean(self):
+        if self.role == 'Medico' and not self.crm:
+            raise ValidationError('O CRM é obrigatório para médicos.')
+        super().clean()
+
+    def __str__(self):
+        return self.nome
+    
