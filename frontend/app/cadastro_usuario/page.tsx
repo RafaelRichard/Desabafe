@@ -11,6 +11,7 @@ export default function CadastroUsuario() {
         cpf: '',
         role: 'Paciente',
         crm: '',
+        crp: '',
         status: 'ativo',
     });
     const [message, setMessage] = useState('');
@@ -45,8 +46,13 @@ export default function CadastroUsuario() {
             return;
         }
 
-        if (formData.role === 'Medico' && formData.crm.trim() === '') {
-            setMessage('CRM é obrigatório para médicos.');
+        if (formData.role === 'Psiquiatra' && formData.crm.trim() === '') {
+            setMessage('CRM é obrigatório para psiquiatras.');
+            return;
+        }
+
+        if (formData.role === 'Psicologo' && formData.crp.trim() === '') {
+            setMessage('CRP é obrigatório para psicólogos.');
             return;
         }
 
@@ -86,9 +92,8 @@ export default function CadastroUsuario() {
 
                 {message && (
                     <div
-                        className={`mt-4 p-3 rounded text-center text-white ${
-                            message.includes('Erro') ? 'bg-red-500' : 'bg-green-500'
-                        }`}
+                        className={`mt-4 p-3 rounded text-center text-white ${message.includes('Erro') ? 'bg-red-500' : 'bg-green-500'
+                            }`}
                     >
                         {message}
                     </div>
@@ -104,7 +109,8 @@ export default function CadastroUsuario() {
                             className="w-full p-2 border rounded"
                         >
                             <option value="Paciente">Paciente</option>
-                            <option value="Medico">Médico</option>
+                            <option value="Psiquiatra">Psiquiatra</option>
+                            <option value="Psicologo">Psicólogo</option>
                         </select>
                     </div>
 
@@ -155,13 +161,27 @@ export default function CadastroUsuario() {
                         />
                     </div>
 
-                    {formData.role === 'Medico' && (
+                    {formData.role === 'Psiquiatra' && (
                         <div className="mb-4">
                             <label className="block text-gray-600">CRM</label>
                             <input
                                 type="text"
                                 name="crm"
                                 value={formData.crm}
+                                onChange={handleChange}
+                                required
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                    )}
+
+                    {formData.role === 'Psicologo' && (
+                        <div className="mb-4">
+                            <label className="block text-gray-600">CRP</label>
+                            <input
+                                type="text"
+                                name="crp"
+                                value={formData.crp}
                                 onChange={handleChange}
                                 required
                                 className="w-full p-2 border rounded"

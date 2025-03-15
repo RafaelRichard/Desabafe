@@ -52,10 +52,10 @@ export default function RootLayout({
                   </Link>
                 ))}
                 <Link
-                  href="/area-do-usuario"
+                  href="/login"
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
                 >
-                  Área do Usuário
+                  Login
                 </Link>
               </div>
 
@@ -84,10 +84,10 @@ export default function RootLayout({
                       </Link>
                     ))}
                     <Link
-                      href="/area-do-usuario"
+                      href="/login"
                       className="block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
                     >
-                      Área do Usuário
+                      Login
                     </Link>
                   </div>
                 </div>

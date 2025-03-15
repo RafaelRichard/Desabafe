@@ -47,13 +47,16 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
 ]
 
-
+CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_NAME = 'csrftoken'  
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_SAMESITE = None
 CSRF_COOKIE_SECURE = False 
 CSRF_USE_SESSIONS = False
+
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
 
 
 MIDDLEWARE = [
@@ -67,9 +70,17 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'app_projeto.valida.backends.EmailBackend',   
+    'django.contrib.auth.backends.ModelBackend', 
+    ]
+    
+
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Permite que o Next.js acesse o Django
+    'http://localhost:3000', 
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
     'content-type',

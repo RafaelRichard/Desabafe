@@ -1,12 +1,9 @@
 from django.http import JsonResponse
 import json
 from .models import Usuario
-from django.contrib.auth.hashers import make_password
-import re
+from django.contrib.auth.hashers import check_password
 from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
-from django.contrib.auth import authenticate
-
 
 def get_csrf_token(request):
     return JsonResponse({'csrfToken': get_token(request)})
@@ -15,21 +12,6 @@ def get_csrf_token(request):
 def cadastrar_usuario(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados inválidos'}, status=400)
-
-        # Processamento dos dados...
-        return JsonResponse({'message': 'Cadastro realizado com sucesso!'}, status=201)
-
-    return JsonResponse({'error': 'Método não permitido'}, status=405)
-
-# Remova o @csrf_exempt
-# @csrf_exempt
-def cadastrar_usuario(request):
-    if request.method == 'POST':
-        try:
-            # Tenta carregar os dados JSON do corpo da requisição
             data = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Dados inválidos'}, status=400)
@@ -48,9 +30,13 @@ def cadastrar_usuario(request):
         if not re.match(cpf_regex, cpf):
             return JsonResponse({'error': 'CPF inválido. O formato deve ser XXX.XXX.XXX-XX.'}, status=400)
 
-        # Valida o CRM para médicos
-        if role == 'Medico' and not data.get('crm'):
-            return JsonResponse({'error': 'CRM é obrigatório para médicos.'}, status=400)
+        # Valida o CRM para psiquiatras
+        if role == 'Psiquiatra' and not data.get('crm'):
+            return JsonResponse({'error': 'O CRM é obrigatório para psiquiatras.'}, status=400)
+        
+        # Valida o CRP para psicólogos
+        if role == 'Psicologo' and not data.get('crp'):
+            return JsonResponse({'error': 'O CRP é obrigatório para psicólogos.'}, status=400)
 
         # Criptografa a senha
         senha_criptografada = make_password(senha)
@@ -62,7 +48,10 @@ def cadastrar_usuario(request):
             telefone=telefone,
             cpf=cpf,
             senha=senha_criptografada,
-            status=status
+            status=status,
+            role=role,  # Adiciona o campo role corretamente
+            crm=data.get('crm') if role == 'Psiquiatra' else None,  # Atribui o CRM somente se for psiquiatra
+            crp=data.get('crp') if role == 'Psicologo' else None,  # Atribui o CRP somente se for psicólogo
         )
 
         # Salva o usuário no banco de dados
@@ -74,7 +63,7 @@ def cadastrar_usuario(request):
     # Retorna erro para métodos não permitidos
     return JsonResponse({'error': 'Método não permitido'}, status=405)
 
-
+@csrf_exempt
 def login_usuario(request):
     if request.method == 'POST':
         try:
@@ -85,15 +74,26 @@ def login_usuario(request):
         email = data.get('email')
         password = data.get('password')
 
-        # Tenta autenticar o usuário usando o email e a senha
-        user = authenticate(request, username=email, password=password)
+        # Busca o usuário no modelo Usuario com base no email
+        try:
+            usuario = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
 
-        if user is not None:
-            # Sucesso no login
-            # Envia a resposta com o role do usuário
-            return JsonResponse({'message': 'Login bem-sucedido', 'role': user.role}, status=200)
-        else:
-            # Credenciais inválidas
-            return JsonResponse({'error': 'Credenciais inválidas'}, status=400)
+        # Verifica se a senha está correta
+        if check_password(password, usuario.senha):  # Verifica a senha criptografada
     
+            if usuario.role == 'Psiquiatra' and not usuario.crm:
+                return JsonResponse({'error': 'CRM obrigatório para psiquiatras'}, status=400)
+            if usuario.role == 'Psicologo' and not usuario.crp:
+                return JsonResponse({'error': 'CRP obrigatório para psicólogos'}, status=400)
+
+            # Se tudo estiver correto, retornar os dados do usuário
+            return JsonResponse({
+                'message': 'Login bem-sucedido!',
+
+            })
+        else:
+            return JsonResponse({'error': 'Credenciais inválidas'}, status=401)
+
     return JsonResponse({'error': 'Método não permitido'}, status=405)

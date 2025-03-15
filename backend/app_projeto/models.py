@@ -9,14 +9,19 @@ class Usuario(models.Model):
     senha = models.CharField(max_length=255)
     status = models.CharField(max_length=10, default='ativo')
     
-    role = models.CharField(max_length=10, choices=[('Paciente', 'Paciente'), ('Medico', 'Médico')], default='Paciente')
-    crm = models.CharField(max_length=20, blank=True, null=True)  # Permitido vazio
-
+    role = models.CharField(
+        max_length=10, 
+        choices=[('Paciente', 'Paciente'), ('Psiquiatra', 'Psiquiatra'), ('Psicologo', 'Psicólogo')], 
+        default='Paciente'
+    )
+    crm = models.CharField(max_length=20, blank=True, null=True)  
+    crp = models.CharField(max_length=20, blank=True, null=True)  
     def clean(self):
-        if self.role == 'Medico' and not self.crm:
-            raise ValidationError('O CRM é obrigatório para médicos.')
+        if self.role == 'Psiquiatra' and not self.crm:
+            raise ValidationError('O CRM é obrigatório para psiquiatras.')
+        if self.role == 'Psicologo' and not self.crp:
+            raise ValidationError('O CRP é obrigatório para psicólogos.')
         super().clean()
 
     def __str__(self):
         return self.nome
-    
