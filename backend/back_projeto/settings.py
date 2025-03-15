@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import datetime
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django.contrib.sites',
     'corsheaders',
     'app_projeto',
 ]
@@ -49,14 +50,15 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_NAME = 'csrftoken'  
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_HEADER_NAME = "X-CSRFToken"  
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_SAMESITE = None
 CSRF_COOKIE_SECURE = False 
 CSRF_USE_SESSIONS = False
 
 SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
 
 
 MIDDLEWARE = [
@@ -68,7 +70,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    #'app_projeto.middlewares.JWTAuthenticationMiddleware',
+    # 'app_projeto.middleware.TokenAuthMiddleware',  # Comente temporariamente
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Usa JWT
+    ),
+}
+
 
 AUTHENTICATION_BACKENDS = [
     'app_projeto.valida.backends.EmailBackend',   
@@ -85,7 +96,13 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'content-type',
     'x-csrftoken',
+    'Authorization',
+
 ]
+
+SECRET_KEY = "8Xb3x6HUQd"  # Mantenha isso seguro
+JWT_EXPIRATION_TIME = datetime.timedelta(minutes=30)
+JWT_ALGORITHM = "HS256"
 
 ROOT_URLCONF = 'back_projeto.urls'
 

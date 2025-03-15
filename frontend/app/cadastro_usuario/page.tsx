@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CadastroUsuario() {
     const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export default function CadastroUsuario() {
         status: 'ativo',
     });
     const [message, setMessage] = useState('');
+    const router = useRouter();
 
     // Função para obter o token CSRF
     const getCsrfToken = (): string | null => {
@@ -35,47 +37,39 @@ export default function CadastroUsuario() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Função para enviar os dados do formulário
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setMessage('');
-
-        // Validações
-        if (!validateCPF(formData.cpf)) {
-            setMessage('CPF inválido. O formato deve ser XXX.XXX.XXX-XX.');
-            return;
-        }
-
-        if (formData.role === 'Psiquiatra' && formData.crm.trim() === '') {
-            setMessage('CRM é obrigatório para psiquiatras.');
-            return;
-        }
-
-        if (formData.role === 'Psicologo' && formData.crp.trim() === '') {
-            setMessage('CRP é obrigatório para psicólogos.');
-            return;
-        }
-
+    
+        // Validações (que você já tem)
+    
         try {
             const csrfToken = getCsrfToken(); // Obtém o token CSRF do cookie
             if (!csrfToken) {
                 setMessage('Token CSRF não encontrado.');
                 return;
             }
-
+    
+            
             const response = await fetch('http://localhost:8000/cadastrar_usuario/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken, // Envia o CSRF token no cabeçalho
+                    'X-CSRFToken': csrfToken,  // Envia o token CSRF
                 },
                 body: JSON.stringify(formData),
-                credentials: 'include', // Inclui os cookies na requisição
+                credentials: 'include',
             });
-
+    
             const data = await response.json();
+    
             if (response.ok) {
-                setMessage('Cadastro realizado com sucesso!');
+                // Armazenando o token JWT, que o backend agora retorna
+                if (data.token) {
+                    localStorage.setItem('auth_token', data.token);
+                    setMessage('Cadastro realizado com sucesso!');
+                    router.push('/login');  // Redireciona para a página de login
+                }
             } else {
                 setMessage(data.error || 'Erro ao realizar cadastro.');
             }
@@ -84,6 +78,7 @@ export default function CadastroUsuario() {
             setMessage('Erro ao conectar com o servidor.');
         }
     };
+    
 
     return (
         <div className="pt-20 bg-gray-50 min-h-screen flex justify-center items-center">

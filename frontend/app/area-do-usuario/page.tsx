@@ -14,21 +14,33 @@ export default function AreaDoUsuario() {
   useEffect(() => {
     // Verifica a presença do token no localStorage
     const authToken = localStorage.getItem('auth_token');
-    if (authToken) {
+    
+    if (!authToken) {
+      // Se não houver token, redireciona para a página de login
+      router.push('/login');
+      return;
+    }
+
+    // Se o token estiver presente, pode continuar a verificação
+    const userRole = localStorage.getItem('user_role');
+    const userEmail = localStorage.getItem('user_email');  // Corrigido para user_email
+
+    if (userRole && userEmail) {
       setIsLoggedIn(true);
-      setRole(localStorage.getItem('user_role') || '');
-      setUserName(localStorage.getItem('user_name') || '');
+      setRole(userRole);
+      setUserName(userEmail);  // Corrigido para userEmail
     } else {
-      // Se não estiver logado, redireciona para a página de login
+      // Se o token estiver presente, mas não os dados necessários, redireciona para o login
       router.push('/login');
     }
+    
     setLoading(false);  // Fim do carregamento
   }, [router]); // O useEffect depende do router
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_role');
-    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_email');  // Corrigido para user_email
     setIsLoggedIn(false);
     setRole('');
     setUserName('');

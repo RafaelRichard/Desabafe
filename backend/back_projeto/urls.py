@@ -16,11 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from app_projeto.views import cadastrar_usuario, get_csrf_token, login_usuario
+from app_projeto.views import cadastrar_usuario, get_csrf_token, login_usuario, rota_protegida, google_login_view, MyTokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('cadastrar_usuario/', cadastrar_usuario, name='cadastrar_usuario'),
     path('login_usuario/', login_usuario, name='login_usuario'),
+    path("api/protegida/", rota_protegida, name="rota_protegida"),
     path("get-csrf-token/", get_csrf_token, name="get-csrf-token"),
+    path("api/auth/google/", google_login_view, name="google_login"),
+    path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/token/refresh/", TokenObtainPairView.as_view(), name="token_refresh"),
 ]
