@@ -8,16 +8,21 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password
 from django.middleware.csrf import get_token
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_protect
 from .utils import generate_jwt
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from .permissions import IsAdmin, IsPaciente, IsPsicologo, IsPsiquiatra
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 
 
 def get_csrf_token(request):
     return JsonResponse({'csrfToken': get_token(request)})
+
 
 @csrf_exempt
 def cadastrar_usuario(request):
@@ -35,6 +40,11 @@ def cadastrar_usuario(request):
         senha = data.get('password')
         status = data.get('status', 'ativo')  # Definido como 'ativo' por padrão
         role = data.get('role')
+
+        # Se o role for 'Admin', devemos garantir que o usuário autenticado seja admin
+        if role == 'Admin':
+            if not request.user.is_superuser:  # Verifica se o usuário que está criando é um admin
+                return JsonResponse({'error': 'Apenas administradores podem criar outros administradores.'}, status=403)
 
         # Valida o CPF
         cpf_regex = r'^\d{3}\.\d{3}\.\d{3}-\d{2}$'
@@ -85,11 +95,7 @@ def cadastrar_usuario(request):
 @csrf_exempt
 def login_usuario(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados inválidos'}, status=400)
-
+        data = json.loads(request.body)
         email = data.get('email')
         password = data.get('password')
 
@@ -98,25 +104,40 @@ def login_usuario(request):
         except Usuario.DoesNotExist:
             return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
 
-        # Verifica se a senha está correta
         if check_password(password, usuario.senha):  
-            # Gera o token JWT
             token = generate_jwt(usuario)
 
-            return JsonResponse({
+            response = JsonResponse({
                 'message': 'Login bem-sucedido!',
-                'token': token
+                'token': token,
+                'email': usuario.email,
+                'role': usuario.role
             })
+            response.set_cookie(
+                key='jwt',
+                value=token,
+                httponly=True,
+                secure=False,  # True em produção
+                samesite='Lax'
+            )
+            return response
         else:
             return JsonResponse({'error': 'Credenciais inválidas'}, status=401)
 
     return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+def logout_usuario(request):
+    response = JsonResponse({'message': 'Logout realizado com sucesso'})
+    response.delete_cookie('jwt')
+    return response
+
 
 def rota_protegida(request):
     if hasattr(request, "user_data"):
         return JsonResponse({"message": "Acesso autorizado!", "user": request.user_data})
     
     return JsonResponse({"error": "Acesso não autorizado"}, status=401)
+
 
 @csrf_exempt
 def google_login_view(request):
@@ -138,7 +159,8 @@ def google_login_view(request):
 
         jwt_token = generate_jwt(user)
         return JsonResponse({"token": jwt_token})
-    
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)  # Gera os tokens padrão
@@ -153,6 +175,35 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         })
         return data
 
+
 # Modifica a view para usar o novo serializer
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class AdminOnlyView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return Response({"message": "Acesso permitido para admins"})
+
+
+class PsicologoOnlyView(APIView):
+    permission_classes = [IsPsicologo]
+
+    def get(self, request):
+        return Response({"message": "Acesso permitido para psicólogos"})
+
+
+class PsiquiatraOnlyView(APIView):
+    permission_classes = [IsPsiquiatra]
+
+    def get(self, request):
+        return Response({"message": "Acesso permitido para psiquiatras"})
+
+
+class PacienteOnlyView(APIView):
+    permission_classes = [IsPaciente]
+
+    def get(self, request):
+        return Response({"message": "Acesso permitido para pacientes"})

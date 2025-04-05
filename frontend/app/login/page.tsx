@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -9,37 +9,57 @@ export default function Login() {
     const [message, setMessage] = useState('');
     const router = useRouter();
 
-    // Função para pegar o token CSRF do cookie
+    // Pega o token CSRF do cookie
     const getCsrfToken = (): string | null => {
         return document.cookie
             .split('; ')
-            .find((row) => row.startsWith('csrftoken='))
-            ?.split('=')[1] || null;
+            .find((row) => row.startsWith('csrftoken='))?.split('=')[1] || null;
     };
 
-    // Função para decodificar o JWT e obter suas informações (opcional)
-    const decodeJwt = (token: string) => {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace('-', '+').replace('_', '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
+    // Faz uma requisição para garantir que o cookie do CSRF seja enviado
+    const fetchCsrfToken = async () => {
+        try {
+            await fetch('http://localhost:8000/get-csrf-token/', {
+                credentials: 'include',
+            });
+        } catch (error) {
+            console.error('Erro ao buscar CSRF token:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCsrfToken();
+    }, []);
+
+    // Decodifica o token JWT
+    const decodeJwt = (token: string): { role: string, email: string } => {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split('')
+                    .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+            return JSON.parse(jsonPayload);
+        } catch (error) {
+            console.error('Erro ao decodificar JWT:', error);
+            return { role: '', email: '' };
+        }
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setMessage('');
 
-        try {
-            // Obtendo o token CSRF
-            const csrfToken = getCsrfToken();
-            if (!csrfToken) {
-                setMessage('Token CSRF não encontrado.');
-                return;
-            }
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            setMessage('Token CSRF não encontrado.');
+            return;
+        }
 
-            // Realizando a requisição de login
+        try {
             const response = await fetch('http://localhost:8000/login_usuario/', {
                 method: 'POST',
                 headers: {
@@ -50,29 +70,28 @@ export default function Login() {
                 credentials: 'include',
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                setMessage(errorData.error || 'Credenciais inválidas.');
+                return;
+            }
+
             const data = await response.json();
 
-            // Verificando se a requisição foi bem-sucedida
-            if (response.ok && data.token) {
-                // Salvando o JWT no localStorage
+            if (data.token) {
+                const decoded = decodeJwt(data.token);
                 localStorage.setItem('auth_token', data.token);
-
-                // Decodificando o JWT para obter as informações do usuário
-                const decodedToken = decodeJwt(data.token);
-                console.log(decodedToken);  // Apenas para debug
-
-                // Salvando os dados do usuário no localStorage
-                localStorage.setItem('user_role', decodedToken.role);
-                localStorage.setItem('user_email', decodedToken.email);
-
+                localStorage.setItem('user_email', decoded.email);
+                localStorage.setItem('user_role', decoded.role);
                 setMessage('Login bem-sucedido!');
-                router.push('/area-do-usuario');  // Redireciona para a área do usuário
+
+                router.push(decoded.role === 'Admin' ? '/area-admin' : '/area-do-usuario');
             } else {
-                setMessage(data.error || 'Credenciais inválidas');
+                setMessage('Token JWT não retornado.');
             }
         } catch (error) {
-            console.error('Erro:', error);
-            setMessage('Erro ao conectar com o servidor');
+            console.error('Erro ao fazer login:', error);
+            setMessage('Erro ao conectar com o servidor.');
         }
     };
 
@@ -114,7 +133,7 @@ export default function Login() {
                 </form>
                 <p className="mt-4 text-center text-sm text-gray-500">
                     Não tem uma conta?{' '}
-                    <Link href="cadastro_usuario" className="text-indigo-600 hover:underline">
+                    <Link href="/cadastro_usuario" className="text-indigo-600 hover:underline">
                         Cadastre-se aqui
                     </Link>
                 </p>

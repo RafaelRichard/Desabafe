@@ -23,12 +23,12 @@ export default function AreaDoUsuario() {
 
     // Se o token estiver presente, pode continuar a verificação
     const userRole = localStorage.getItem('user_role');
-    const userEmail = localStorage.getItem('user_email');  // Corrigido para user_email
+    const userEmail = localStorage.getItem('user_email'); 
 
     if (userRole && userEmail) {
       setIsLoggedIn(true);
       setRole(userRole);
-      setUserName(userEmail);  // Corrigido para userEmail
+      setUserName(userEmail); 
     } else {
       // Se o token estiver presente, mas não os dados necessários, redireciona para o login
       router.push('/login');

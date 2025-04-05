@@ -50,7 +50,6 @@ export default function CadastroUsuario() {
                 return;
             }
     
-            
             const response = await fetch('http://localhost:8000/cadastrar_usuario/', {
                 method: 'POST',
                 headers: {
@@ -106,6 +105,7 @@ export default function CadastroUsuario() {
                             <option value="Paciente">Paciente</option>
                             <option value="Psiquiatra">Psiquiatra</option>
                             <option value="Psicologo">Psicólogo</option>
+                            <option value="Admin">Admin</option> {/* Adicionando a opção Admin */}
                         </select>
                     </div>
 

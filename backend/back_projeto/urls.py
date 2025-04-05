@@ -28,5 +28,6 @@ urlpatterns = [
     path("api/auth/google/", google_login_view, name="google_login"),
     path("api/token/", MyTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/token/refresh/", TokenObtainPairView.as_view(), name="token_refresh"),
+    path('csrf/', get_csrf_token, name='csrf_token'),
+
 ]

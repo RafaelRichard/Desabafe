@@ -1,8 +1,11 @@
+// Arquivo: layout.tsx
+
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Link from 'next/link';
 import Image from 'next/image';
+import ClientOnlyHeader from './ClientOnlyHeader';  // Componente cliente separado
 
 const geist = Geist({
   subsets: ["latin"],
@@ -22,82 +25,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth">
       <body className={`${geist.variable} font-sans antialiased bg-background text-foreground`}>
-        <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50 shadow-md">
-          <nav className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center space-x-2">
-                <Image
-                  src="/img/testee.png"
-                  alt="Desabafe"
-                  width={40}
-                  height={40}
-                  className="w-auto h-10"
-                />
-                <span className="text-xl font-semibold text-gray-900">DesabafeOnline</span>
-              </Link>
-
-              {/* Menu de navegação (desktop) */}
-              <div className="hidden md:flex items-center space-x-8">
-                {[
-                  ['Psiquiatria', '/psiquiatria'],
-                  ['Psicologia', '/psicologia'],
-                  ['Sobre Nós', '/Sobre'],
-                ].map(([title, url]) => (
-                  <Link
-                    key={url}
-                    href={url}
-                    className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-sm font-medium"
-                  >
-                    {title}
-                  </Link>
-                ))}
-                <Link
-                  href="/login"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
-                >
-                  Login
-                </Link>
-              </div>
-
-              {/* Menu Hamburguer (mobile) */}
-              <div className="md:hidden">
-                <input type="checkbox" id="menu-toggle" className="hidden peer" />
-                <label htmlFor="menu-toggle" className="text-gray-600 hover:text-purple-600 cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-
-                </label>
-                <div className="peer-checked:block hidden absolute top-16 right-0 w-full bg-white border-t border-gray-100 shadow-md p-4">
-                  <div className="space-y-4">
-                    {[
-                      ['Psiquiatria', '/psiquiatria'],
-                      ['Psicologia', '/psicologia'],
-                      ['Sobre Nós', '/Sobre'],
-                    ].map(([title, url]) => (
-                      <Link
-                        key={url}
-                        href={url}
-                        className="block text-gray-600 hover:text-purple-600 text-sm font-medium"
-                      >
-                        {title}
-                      </Link>
-                    ))}
-                    <Link
-                      href="/login"
-                      className="block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
-                    >
-                      Login
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </nav>
-        </header>
-
+        <ClientOnlyHeader />
         <main className="min-h-screen pt-16">{children}</main>
-
         {/* Rodapé */}
         <footer className="bg-gray-900 text-white py-12 mt-12">
           <div className="container mx-auto px-6">

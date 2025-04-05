@@ -19,25 +19,26 @@ export default function Home() {
                 Comece Agora
               </Button>
             </div>
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 flex justify-center">
               <Image
-                src="/img/logo.png"
+                src="/img/TesteLogo.png"
                 alt="Atendimento Online"
-                width={600}
-                height={400}
-                className="rounded-lg shadow-xl"
+                width={500}
+                height={250}
+                className="rounded-lg shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl ease-in-out"
               />
             </div>
+
           </div>
         </div>
       </section>
- {/* Seção de Serviços */}
- <section className="py-16 bg-white flex justify-center">
+      {/* Seção de Serviços */}
+      <section className="py-16 bg-white flex justify-center">
         <div className="container mx-auto px-6 sm:px-8 text-center">
           <h2 className="text-3xl font-extrabold mb-12 text-gray-800">
             Nossos Serviços
           </h2>
-          
+
           <div className="flex flex-wrap justify-center gap-6">
             {[
               { title: 'PSIQUIATRIA', action: 'AGENDE AGORA', icon: '🧠', link: '/psiquiatria' },
